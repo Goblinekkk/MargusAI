@@ -33,7 +33,7 @@ if prompt := st.chat_input("Napiš Margus AI..."):
 
     with st.chat_message("assistant"):
         response = client.chat.completions.create(
-            model="nvidia/llama-3.1-nemotron-70b-instruct",
+            model="meta/llama-3.1-8b-instruct"
             messages=st.session_state.messages,
             temperature=0.5
         )
