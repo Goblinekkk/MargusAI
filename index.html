@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Moje Soukromá AI</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; background: #1a1a1a; color: white; padding: 20px; }
+        #chat { height: 300px; border: 1px solid #444; overflow-y: auto; padding: 10px; background: #222; margin-bottom: 10px; border-radius: 8px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 10px; }
+        input { flex-grow: 1; padding: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
+        button { padding: 10px 20px; background: #76b900; border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        .key-section { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #76b900; }
+    </style>
+</head>
+<body>
+
+    <div class="key-section">
+        <label>Vlož svůj NVIDIA API Klíč:</label><br><br>
+        <input type="password" id="apiKey" placeholder="nvapi-xxxxxx...">
+        <p style="font-size: 0.8em; color: #aaa;">Klíč se nikam neukládá, zůstane jen u tebe v prohlížeči.</p>
+    </div>
+
+    <div id="chat"></div>
+
+    <div class="controls">
+        <input type="text" id="userInput" placeholder="Napiš otázku...">
+        <button onclick="sendMessage()">Odeslat</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const keyInput = document.getElementById('apiKey').value;
+            const userInput = document.getElementById('userInput');
+            const chat = document.getElementById('chat');
+
+            if (!keyInput) {
+                alert("Nejdříve vlož API klíč!");
+                return;
+            }
+            if (!userInput.value) return;
+
+            const message = userInput.value;
+            chat.innerHTML += `<div><b>Ty:</b> ${message}</div>`;
+            userInput.value = "";
+
+            try {
+                const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${keyInput}`
+                    },
+                    body: JSON.stringify({
+                        model: "nvidia/llama-3.1-nemotron-70b-instruct",
+                        messages: [{role: "user", content: message}],
+                        temperature: 0.5
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.choices) {
+                    const aiText = data.choices[0].message.content;
+                    chat.innerHTML += `<div><b style="color: #76b900">AI:</b> ${aiText}</div>`;
+                } else {
+                    chat.innerHTML += `<div style="color: red">Chyba: Pravděpodobně špatný klíč.</div>`;
+                }
+            } catch (error) {
+                chat.innerHTML += `<div style="color: red">Chyba připojení.</div>`;
+            }
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
